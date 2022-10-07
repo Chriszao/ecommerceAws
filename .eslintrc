@@ -24,13 +24,14 @@
   "rules": {
     "prettier/prettier": "error",
     "camelcase": "off",
-    "import/no-unresolved": "error",
+    "import/no-unresolved": "off",
     "class-methods-use-this": "off",
     "import/prefer-default-export": "off",
     "no-shadow": "off",
     "no-console": "off",
     "no-useless-constructor": "off",
     "no-empty-function": "off",
+    "@typescript-eslint/consistent-type-imports": "error",
     "import/extensions": [
       "error",
       "ignorePackages",
