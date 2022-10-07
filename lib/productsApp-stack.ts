@@ -5,12 +5,12 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import type { Construct } from 'constructs';
 
 export class ProductsAppStack extends Stack {
-  readonly productsFetchHandler: NodejsFunction;
+  readonly fetchProductsHandler: NodejsFunction;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    this.productsFetchHandler = new NodejsFunction(this, 'fetchProducts', {
+    this.fetchProductsHandler = new NodejsFunction(this, 'fetchProducts', {
       functionName: 'fetchProducts',
       entry: 'lambda/products/fetchProducts.ts',
       handler: 'handler',
