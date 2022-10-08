@@ -1,21 +1,35 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
-import { EcommerceAwsStack } from '../lib/ecommerce_aws-stack';
+import type { Environment } from 'aws-cdk-lib';
+import { App } from 'aws-cdk-lib';
 
-const app = new cdk.App();
-new EcommerceAwsStack(app, 'EcommerceAwsStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+import { ECommerceApiStack } from '../lib/ecommerceApi-stack';
+import { ProductsAppStack } from '../lib/productsApp-stack';
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const app = new App();
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+const env: Environment = {
+  account: '724998245582',
+  region: 'us-east-1',
+};
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const tags = {
+  cost: 'ECommerce',
+  team: 'Christofer Assis',
+};
+
+const commonProps = {
+  env,
+  tags,
+};
+
+const productsAppStack = new ProductsAppStack(app, 'ProductsApp', {
+  ...commonProps,
 });
+
+const eCommerceApiStack = new ECommerceApiStack(app, 'ECommerceApi', {
+  ...commonProps,
+  fetchProductsHandler: productsAppStack.fetchProductsHandler,
+});
+
+eCommerceApiStack.addDependency(productsAppStack);
