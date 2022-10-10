@@ -1,7 +1,9 @@
 import type { StackProps } from 'aws-cdk-lib';
 import { RemovalPolicy, Duration, Stack } from 'aws-cdk-lib';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { LayerVersion } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 
 export class ProductsAppStack extends Stack {
@@ -26,18 +28,31 @@ export class ProductsAppStack extends Stack {
       writeCapacity: 1,
     });
 
+    // Products Layer
+    const productsLayerArn = StringParameter.valueForStringParameter(
+      this,
+      'ProductsLayerVersionArn',
+    );
+
+    const productsLayer = LayerVersion.fromLayerVersionArn(
+      this,
+      'ProductsLayerVersionArn',
+      productsLayerArn,
+    );
+
     this.fetchProductsHandler = new NodejsFunction(this, 'fetchProducts', {
       functionName: 'fetchProducts',
       entry: 'lambda/products/fetchProducts.ts',
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(6),
+      layers: [productsLayer],
       bundling: {
         minify: true,
         sourceMap: false,
       },
       environment: {
-        PRODUCTS_DYNAMO_DB: this.productsDynamoDb.tableName,
+        DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName,
       },
     });
 
@@ -49,12 +64,13 @@ export class ProductsAppStack extends Stack {
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(6),
+      layers: [productsLayer],
       bundling: {
         minify: true,
         sourceMap: false,
       },
       environment: {
-        PRODUCTS_DYNAMO_DB: this.productsDynamoDb.tableName,
+        DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName,
       },
     });
 
