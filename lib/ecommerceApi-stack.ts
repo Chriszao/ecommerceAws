@@ -12,6 +12,7 @@ import type { Construct } from 'constructs';
 
 interface ECommerceApiStackProps extends StackProps {
   fetchProductsHandler: NodejsFunction;
+  adminProductsHandler: NodejsFunction;
 }
 
 export class ECommerceApiStack extends Stack {
@@ -42,7 +43,21 @@ export class ECommerceApiStack extends Stack {
       props.fetchProductsHandler,
     );
 
+    const adminProductsIntegration = new LambdaIntegration(
+      props.adminProductsHandler,
+    );
+
     const productsResource = api.root.addResource('products');
+    const productIdResource = productsResource.addResource('{id}');
+
     productsResource.addMethod('GET', fetchProductsIntegration);
+
+    productIdResource.addMethod('GET', fetchProductsIntegration);
+
+    productsResource.addMethod('POST', adminProductsIntegration);
+
+    productIdResource.addMethod('PUT', adminProductsIntegration);
+
+    productIdResource.addMethod('DELETE', adminProductsIntegration);
   }
 }
