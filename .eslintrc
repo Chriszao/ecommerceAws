@@ -32,6 +32,9 @@
     "no-useless-constructor": "off",
     "no-empty-function": "off",
     "@typescript-eslint/consistent-type-imports": "error",
+    "no-new": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/no-absolute-path": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
@@ -56,14 +59,6 @@
           "order": "asc",
           "ignoreCase": true
         }
-      }
-    ],
-    "import/no-extraneous-dependencies": [
-      "error",
-      {
-        "devDependencies": [
-          "*/.spec.js"
-        ]
       }
     ]
   },
