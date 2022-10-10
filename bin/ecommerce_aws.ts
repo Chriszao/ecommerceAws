@@ -5,6 +5,7 @@ import { App } from 'aws-cdk-lib';
 
 import { ECommerceApiStack } from '../lib/ecommerceApi-stack';
 import { ProductsAppStack } from '../lib/productsApp-stack';
+import { ProductsAppLayersStack } from '../lib/productsAppLayer-stack';
 
 const app = new App();
 
@@ -23,13 +24,20 @@ const commonProps = {
   tags,
 };
 
-const productsAppStack = new ProductsAppStack(app, 'ProductsApp', {
-  ...commonProps,
-});
+const productsAppLayersStack = new ProductsAppLayersStack(
+  app,
+  'ProductsAppLayers',
+  commonProps,
+);
+
+const productsAppStack = new ProductsAppStack(app, 'ProductsApp', commonProps);
+
+productsAppStack.addDependency(productsAppLayersStack);
 
 const eCommerceApiStack = new ECommerceApiStack(app, 'ECommerceApi', {
   ...commonProps,
   fetchProductsHandler: productsAppStack.fetchProductsHandler,
+  adminProductsHandler: productsAppStack.adminProductsHandler,
 });
 
 eCommerceApiStack.addDependency(productsAppStack);
