@@ -1,7 +1,11 @@
 import type { StackProps } from 'aws-cdk-lib';
 import { RemovalPolicy, Duration, Stack } from 'aws-cdk-lib';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { LayerVersion } from 'aws-cdk-lib/aws-lambda';
+import {
+  LambdaInsightsVersion,
+  LayerVersion,
+  Tracing,
+} from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
@@ -54,6 +58,8 @@ export class ProductsAppStack extends Stack {
       environment: {
         DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName,
       },
+      tracing: Tracing.ACTIVE,
+      insightsVersion: LambdaInsightsVersion.VERSION_1_0_119_0,
     });
 
     this.productsDynamoDb.grantReadData(this.fetchProductsHandler);
@@ -72,6 +78,8 @@ export class ProductsAppStack extends Stack {
       environment: {
         DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName,
       },
+      tracing: Tracing.ACTIVE,
+      insightsVersion: LambdaInsightsVersion.VERSION_1_0_119_0,
     });
 
     this.productsDynamoDb.grantWriteData(this.adminProductsHandler);
