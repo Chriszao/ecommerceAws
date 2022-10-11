@@ -1,7 +1,22 @@
 import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { v4 as uuid } from 'uuid';
 
-import type { IProductRepository, Product } from './interfaces';
+export interface Product {
+  id: string;
+  productName: string;
+  code: string;
+  price: number;
+  model: string;
+  productUrl: string;
+}
+
+interface IProductRepository {
+  fetchProducts(): Promise<Product[]>;
+  getProductById(id: string): Promise<Product | undefined>;
+  createProduct(product: Omit<Product, 'id'>): Promise<Product>;
+  deleteProduct(id: string): Promise<Product | undefined>;
+  updateProduct(id: string, product: Product): Promise<Product>;
+}
 
 export class ProductRepository implements IProductRepository {
   constructor(
@@ -38,7 +53,7 @@ export class ProductRepository implements IProductRepository {
       id: uuid(),
     };
 
-    this.dynamoDbClient
+    await this.dynamoDbClient
       .put({
         TableName: this.tableName,
         Item: newProduct,
@@ -71,13 +86,20 @@ export class ProductRepository implements IProductRepository {
         },
         ConditionExpression: 'attribute_exists(id)',
         ReturnValues: 'UPDATED_NEW',
-        UpdateExpression:
-          'SET productName = :productName, code = :code, price = :price, model = :model',
+        UpdateExpression: `
+          SET
+            productName = :productName,
+            code = :code,
+            price = :price,
+            model = :model,
+            productUrl = :productUrl
+          `,
         ExpressionAttributeValues: {
           ':productName': product.productName,
           ':code': product.code,
           ':price': product.price,
           ':model': product.model,
+          ':productUrl': product.productUrl,
         },
       })
       .promise();
