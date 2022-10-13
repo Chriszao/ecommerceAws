@@ -35,6 +35,14 @@
     "no-new": "off",
     "import/no-extraneous-dependencies": "off",
     "import/no-absolute-path": "off",
+    "no-bitwise": [
+      "error",
+      {
+        "allow": [
+          "~"
+        ]
+      }
+    ],
     "import/extensions": [
       "error",
       "ignorePackages",
