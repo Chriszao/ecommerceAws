@@ -8,7 +8,6 @@ import { captureAWS } from 'aws-xray-sdk';
 
 import { ProductRepository } from '/opt/nodejs/productsLayer';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 captureAWS(require('aws-sdk'));
 
 const tableName = process.env.DYNAMO_TABLE_NAME as string;
