@@ -4,6 +4,7 @@ import {
   AccessLogFormat,
   LambdaIntegration,
   LogGroupLogDestination,
+  RequestValidator,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -13,6 +14,7 @@ import type { Construct } from 'constructs';
 interface ECommerceApiStackProps extends StackProps {
   fetchProductsHandler: NodejsFunction;
   adminProductsHandler: NodejsFunction;
+  ordersHandler: NodejsFunction;
 }
 
 export class ECommerceApiStack extends Stack {
@@ -39,6 +41,11 @@ export class ECommerceApiStack extends Stack {
       },
     });
 
+    this.createProductsService(props, api);
+    this.createOrdersService(props, api);
+  }
+
+  private createProductsService(props: ECommerceApiStackProps, api: RestApi) {
     const fetchProductsIntegration = new LambdaIntegration(
       props.fetchProductsHandler,
     );
@@ -59,5 +66,33 @@ export class ECommerceApiStack extends Stack {
     productIdResource.addMethod('PUT', adminProductsIntegration);
 
     productIdResource.addMethod('DELETE', adminProductsIntegration);
+  }
+
+  private createOrdersService(props: ECommerceApiStackProps, api: RestApi) {
+    const ordersIntegration = new LambdaIntegration(props.ordersHandler);
+
+    const ordersResource = api.root.addResource('orders');
+
+    ordersResource.addMethod('POST', ordersIntegration);
+
+    ordersResource.addMethod('GET', ordersIntegration);
+
+    const orderDeletionValidator = new RequestValidator(
+      this,
+      'OrderDeletionValidator',
+      {
+        restApi: api,
+        requestValidatorName: 'OrderDeletionValidator',
+        validateRequestParameters: true,
+      },
+    );
+
+    ordersResource.addMethod('DELETE', ordersIntegration, {
+      requestParameters: {
+        'method.request.querystring.email': true,
+        'method.request.querystring.orderId': true,
+      },
+      requestValidator: orderDeletionValidator,
+    });
   }
 }

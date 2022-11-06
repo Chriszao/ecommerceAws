@@ -21,7 +21,7 @@ export class ProductsAppLayersStack extends Stack {
     });
 
     const productEventsLayers = new LayerVersion(this, 'ProductEventsLayer', {
-      code: Code.fromAsset('lambda/products/layers/productEventsLayers'),
+      code: Code.fromAsset('lambda/products/layers/productEventsLayer'),
       compatibleRuntimes: [Runtime.NODEJS_14_X],
       layerVersionName: 'ProductEventsLayer',
       removalPolicy: RemovalPolicy.RETAIN,
