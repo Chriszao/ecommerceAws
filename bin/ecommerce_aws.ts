@@ -5,6 +5,8 @@ import { App } from 'aws-cdk-lib';
 
 import { DynamoDbEvents } from '../lib/dynamoDbEvents-satck';
 import { ECommerceApiStack } from '../lib/ecommerceApi-stack';
+import { OrdersAppStack } from '../lib/ordersApp-stack';
+import { OrdersAppLayersStack } from '../lib/ordersAppLayers-stack';
 import { ProductsAppStack } from '../lib/productsApp-stack';
 import { ProductsAppLayersStack } from '../lib/productsAppLayer-stack';
 
@@ -41,10 +43,26 @@ const productsAppStack = new ProductsAppStack(app, 'ProductsApp', {
 productsAppStack.addDependency(productsAppLayersStack);
 productsAppStack.addDependency(dynamoDbEvents);
 
+const ordersAppLayersStack = new OrdersAppLayersStack(
+  app,
+  'OrdersAppLayer',
+  commonProps,
+);
+
+const ordersAppStack = new OrdersAppStack(app, 'OrdersApp', {
+  ...commonProps,
+  productsDynamoDb: productsAppStack.productsDynamoDb,
+});
+
+ordersAppStack.addDependency(productsAppStack);
+ordersAppStack.addDependency(ordersAppLayersStack);
+
 const eCommerceApiStack = new ECommerceApiStack(app, 'ECommerceApi', {
   ...commonProps,
   fetchProductsHandler: productsAppStack.fetchProductsHandler,
   adminProductsHandler: productsAppStack.adminProductsHandler,
+  ordersHandler: ordersAppStack.ordersHandler,
 });
 
 eCommerceApiStack.addDependency(productsAppStack);
+eCommerceApiStack.addDependency(ordersAppStack);
