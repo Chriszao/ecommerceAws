@@ -3,18 +3,48 @@ import type {
   APIGatewayProxyResult,
   Context,
 } from 'aws-lambda';
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDB, Lambda } from 'aws-sdk';
 import { captureAWS } from 'aws-xray-sdk';
 
+import type { ProductEvent } from '/opt/nodejs/productEventsLayer';
+import { ProductEventType } from '/opt/nodejs/productEventsLayer';
 import type { Product } from '/opt/nodejs/productsLayer';
 import { ProductRepository } from '/opt/nodejs/productsLayer';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 captureAWS(require('aws-sdk'));
 
 const tableName = process.env.DYNAMO_TABLE_NAME as string;
+const productEventsFunctionName = process.env
+  .PRODUCT_EVENTS_FUNCTION_NAME as string;
+
 const dynamoDbClient = new DynamoDB.DocumentClient();
+const lambdaClient = new Lambda();
+
 const productsRepository = new ProductRepository(dynamoDbClient, tableName);
+
+function sendProductEvent(
+  product: Product,
+  eventType: ProductEventType,
+  email: string,
+  lambdaRequestId: string,
+) {
+  const event: ProductEvent = {
+    email,
+    eventType,
+    requestId: lambdaRequestId,
+    price: product.price,
+    productCode: product.code,
+    productId: product.id,
+  };
+
+  return lambdaClient
+    .invoke({
+      FunctionName: productEventsFunctionName,
+      Payload: JSON.stringify(event),
+      InvocationType: 'Event',
+    })
+    .promise();
+}
 
 export async function handler(
   event: APIGatewayProxyEvent,
@@ -38,6 +68,15 @@ export async function handler(
 
         const productCreated = await productsRepository.createProduct(product);
 
+        const response = await sendProductEvent(
+          product,
+          ProductEventType.CREATED,
+          'chris.f.assis18@gmail.com',
+          awsRequestId,
+        );
+
+        console.log('#RESPONSE', response);
+
         return {
           statusCode: 201,
           body: JSON.stringify(productCreated),
@@ -58,6 +97,15 @@ export async function handler(
             productId,
             product,
           );
+
+          const response = await sendProductEvent(
+            updatedProduct,
+            ProductEventType.UPDATED,
+            'chris.f.assis18@gmail.com',
+            awsRequestId,
+          );
+
+          console.log('#RESPONSE', response);
 
           return {
             statusCode: 200,
@@ -83,6 +131,15 @@ export async function handler(
             `An error ocurred while trying to delete product with id: ${productId}`,
           );
         }
+
+        const response = await sendProductEvent(
+          deletedProduct,
+          ProductEventType.DELETED,
+          'chris.f.assis18@gmail.com',
+          awsRequestId,
+        );
+
+        console.log('#RESPONSE', response);
 
         return {
           statusCode: 200,
